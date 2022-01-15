@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Wordle Time Traveler</title>
+
   <style>
     /* Global Styles & Colors */
     :root {
@@ -108,6 +112,7 @@
       // Use game assets archived on January 15, 2022.
       // https://web.archive.org/web/20220115194309/https://powerlanguage.co.uk/wordle/
       var gamesrc = "https://web.archive.org/web/20220115071441js_/https://www.powerlanguage.co.uk/wordle/main.c1506a22.js";
+      var gameStartDate = '2021-06-19T00:00';
       var currentDateString = null;
 
       function replaceDate(win) {
@@ -165,6 +170,17 @@
       window.replaceDate = replaceDate;
       replaceDate();
 
+      // https://stackoverflow.com/a/13419367
+      function parseQuery(queryString) {
+        var query = {};
+        var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+        for (var i = 0; i < pairs.length; i++) {
+          var pair = pairs[i].split('=');
+          query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+        }
+        return query;
+      }
+
       // Prevent defining already-defined elements.
       var ogCustomElementsDefine = customElements.define;
       customElements.define = function(name, element) {
@@ -176,7 +192,14 @@
       function reset() {
         // set date
         var datepicker = document.getElementById('datepicker');
+        if (new Date(datepicker.value).getTime() - new Date(gameStartDate).getTime() < 0) {
+          datepicker.value = gameStartDate;
+        }
         currentDateString = datepicker.value;
+        var newQuerystring = "?date=" + currentDateString.slice(0, 10);
+        if (window.location.search !== newQuerystring) {
+          window.location.search = newQuerystring;
+        }
 
         // clear
         window.localStorage.clear();
@@ -196,10 +219,15 @@
       }
 
       window.onload = function() {
-        // Use today for initial load
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('datepicker').value = now.toISOString().slice(0, 10) + 'T00:00';
+        var queryParams = parseQuery(window.location.search);
+        var startDate;
+        if (queryParams.date) {
+          startDate = new Date(queryParams.date + 'T00:00');
+        } else {
+          startDate = new Date();
+        }
+        startDate.setMinutes(startDate.getMinutes() - startDate.getTimezoneOffset());
+        document.getElementById('datepicker').value = startDate.toISOString().slice(0, 10) + 'T00:00';
 
         reset();
       };
