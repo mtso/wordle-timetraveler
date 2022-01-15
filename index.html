@@ -233,10 +233,14 @@
       };
 
       window.reset = reset;
+
+      window.today = function today() {
+        window.location.search = "";
+      };
     })();
   </script>
   <div class="datepicker-container">
-    <input id="datepicker" type="datetime-local" min="2021-06-19T00:00"> <button onclick="reset()">Reset</button>
+    <button onclick="today()">Today</button> :: <input id="datepicker" type="datetime-local" min="2021-06-19T00:00"> <button onclick="reset()">Set Date</button>
   </div>
 </body>
 </html>
