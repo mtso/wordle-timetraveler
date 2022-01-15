@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* Global Styles & Colors */
+    :root {
+      --green: #6aaa64;
+      --darkendGreen: #538d4e;
+      --yellow: #c9b458;
+      --darkendYellow: #b59f3b;
+      --lightGray: #d8d8d8;
+      --gray: #86888a;
+      --darkGray: #939598;
+      --white: #fff;
+      --black: #212121;
+      /* Colorblind colors */
+      --orange: #f5793a;
+      --blue: #85c0f9;
+      font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      --header-height: 50px;
+      --keyboard-height: 200px;
+      --game-max-width: 500px;
+    }
+    /* Light theme colors */
+    :root {
+      --color-tone-1: #1a1a1b;
+      --color-tone-2: #787c7e;
+      --color-tone-3: #878a8c;
+      --color-tone-4: #d3d6da;
+      --color-tone-5: #edeff1;
+      --color-tone-6: #f6f7f8;
+      --color-tone-7: #ffffff;
+      --opacity-50: rgba(255, 255, 255, 0.5);
+    }
+    /* Dark Theme Colors */
+    .nightmode {
+      --color-tone-1: #d7dadc;
+      --color-tone-2: #818384;
+      --color-tone-3: #565758;
+      --color-tone-4: #3a3a3c;
+      --color-tone-5: #272729;
+      --color-tone-6: #1a1a1b;
+      --color-tone-7: #121213;
+      --opacity-50: rgba(0, 0, 0, 0.5);
+    }
+    /* Constant colors and colors derived from theme */
+    :root,
+    .nightmode {
+      --color-background: var(--color-tone-7);
+    }
+    :root {
+      --color-present: var(--yellow);
+      --color-correct: var(--green);
+      --color-absent: var(--color-tone-2);
+      --tile-text-color: var(--color-tone-7);
+      --key-text-color: var(--color-tone-1);
+      --key-evaluated-text-color: var(--color-tone-7);
+      --key-bg: var(--color-tone-4);
+      --key-bg-present: var(--color-present);
+      --key-bg-correct: var(--color-correct);
+      --key-bg-absent: var(--color-absent);
+      --modal-content-bg: var(--color-tone-7);
+    }
+    .nightmode {
+      --color-present: var(--darkendYellow);
+      --color-correct: var(--darkendGreen);
+      --color-absent: var(--color-tone-4);
+      --tile-text-color: var(--color-tone-1);
+      --key-text-color: var(--color-tone-1);
+      --key-evaluated-text-color: var(--color-tone-1);
+      --key-bg: var(--color-tone-2);
+      --key-bg-present: var(--color-present);
+      --key-bg-correct: var(--color-correct);
+      --key-bg-absent: var(--color-absent);
+      --modal-content-bg: var(--color-tone-7);
+    }
+    .colorblind {
+      --color-correct: var(--orange);
+      --color-present: var(--blue);
+      --tile-text-color: var(--white);
+      --key-bg-present: var(--color-present);
+      --key-bg-correct: var(--color-correct);
+      --key-bg-absent: var(--color-absent);
+    }
+    html {
+      height: 100%;
+    }
+    body {
+      height: 100%;
+      background-color: var(--color-background);
+      margin: 0;
+      padding: 0;
+      /* Prevent scrollbar appearing on page transition */
+      overflow-y: hidden;
+    }
+
+    .datepicker-container {
+      text-align: center;
+      padding: 0.4em 1em;
+      background-color: lightgray;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    (function() {
+      // Use game assets archived on January 15, 2022.
+      // https://web.archive.org/web/20220115194309/https://powerlanguage.co.uk/wordle/
+      var gamesrc = "https://web.archive.org/web/20220115071441js_/https://www.powerlanguage.co.uk/wordle/main.c1506a22.js";
+      var currentDateString = null;
+
+      function replaceDate(win) {
+        win = win || window;
+        var OgDate = win.Date;
+
+        // Stackoverflow-driven solutions
+        // https://stackoverflow.com/a/30882416
+        function CustomDate(a, b, c, d, e, f, g) {
+          var x;
+          switch (arguments.length) {
+            case 0:
+              if (null === currentDateString || '' === currentDateString) {
+                x = new OgDate();
+              } else {
+                x = new OgDate(currentDateString);
+              }
+              break;
+            case 1:
+              x = new OgDate(a);
+              break;
+            case 2:
+              x = new OgDate(a, b);
+              break;
+            case 3:
+              x = new OgDate(a, b, c);
+              break;
+            case 4:
+              x = new OgDate(a, b, c, d);
+              break;
+            case 5:
+              x = new OgDate(a, b, c, d, e);
+              break;
+            case 6:
+              x = new OgDate(a, b, c, d, e, f);
+              break;
+            default:
+              x = new OgDate(a, b, c, d, e, f, g);
+          }
+          x.__proto__ = CustomDate.prototype;
+          return x;
+        }
+        CustomDate.prototype.__proto__ = Date.prototype;
+        CustomDate.now = function() {
+          var date = new CustomDate();
+          return date.getTime();
+        };
+
+        win.Date = CustomDate;
+
+        return function() {
+          win.Date = OgDate;
+        };
+      }
+      window.replaceDate = replaceDate;
+      replaceDate();
+
+      // Prevent defining already-defined elements.
+      var ogCustomElementsDefine = customElements.define;
+      customElements.define = function(name, element) {
+        if (!customElements.get(name)) {
+          ogCustomElementsDefine.call(customElements, name, element);
+        }
+      };
+
+      function reset() {
+        // set date
+        var datepicker = document.getElementById('datepicker');
+        currentDateString = datepicker.value;
+
+        // clear
+        window.localStorage.clear();
+        var gamescript = document.getElementById("gamescript");
+        if (gamescript) gamescript.remove();
+        var gameappnode = document.getElementsByTagName('game-app')[0];
+        if (gameappnode) gameappnode.remove();
+
+        // add game elements
+        var newgameappnode = document.createElement('game-app');
+        document.body.appendChild(newgameappnode);
+        var script = document.createElement('script');
+        script.setAttribute('type', 'text/javascript');
+        script.setAttribute('src', gamesrc);
+        script.setAttribute('id', 'gamescript');
+        document.body.appendChild(script);
+      }
+
+      window.onload = function() {
+        // Use today for initial load
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('datepicker').value = now.toISOString().slice(0, 10) + 'T00:00';
+
+        reset();
+      };
+
+      window.reset = reset;
+    })();
+  </script>
+  <div class="datepicker-container">
+    <input id="datepicker" type="datetime-local" min="2021-06-19T00:00"> <button onclick="reset()">Reset</button>
+  </div>
+</body>
+</html>
