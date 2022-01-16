@@ -189,18 +189,18 @@
         }
       };
 
-      function reset() {
-        // set date
-        var datepicker = document.getElementById('datepicker');
+      function setDate(datepicker) {
         if (new Date(datepicker.value).getTime() - new Date(gameStartDate).getTime() < 0) {
           datepicker.value = gameStartDate;
         }
         currentDateString = datepicker.value;
-        var newQuerystring = "?date=" + currentDateString.slice(0, 10);
-        if (window.location.search !== newQuerystring) {
-          window.location.search = newQuerystring;
+        var newQueryString = "?date=" + currentDateString.slice(0, 10);
+        if (window.location.search !== newQueryString) {
+          window.location.search = newQueryString;
         }
+      }
 
+      function reset() {
         // clear
         window.localStorage.clear();
         var gamescript = document.getElementById("gamescript");
@@ -227,20 +227,48 @@
           startDate = new Date();
         }
         startDate.setMinutes(startDate.getMinutes() - startDate.getTimezoneOffset());
-        document.getElementById('datepicker').value = startDate.toISOString().slice(0, 10) + 'T00:00';
 
+        var datepicker = document.getElementById('datepicker');
+        datepicker.value = startDate.toISOString().slice(0, 10) + 'T00:00';
+        datepicker.addEventListener('change', function(e) {
+          setDate(e.target);
+          reset();
+        });
+
+        setDate(datepicker);
         reset();
       };
 
+      window.setDate = setDate;
       window.reset = reset;
 
       window.today = function today() {
         window.location.search = "";
       };
+
+      /* remove scroll-jack when modal is closed */
+      function isModalOpen() {
+        var gameapp = document.querySelector('game-app');
+        if (!gameapp) return false;
+        var gameModal = gameapp.shadowRoot && gameapp.shadowRoot.querySelector('game-modal');
+        if (gameModal) return gameModal.getAttribute('open') === '';
+        return false;
+      }
+
+      function checkScroll() {
+        if (isModalOpen() && document.body.style.overflowY !== 'hidden') {
+          document.body.style.overflowY = 'hidden';
+        } else if (!isModalOpen() && document.body.style.overflowY !== 'inherit') {
+          console.log('called')
+          document.body.style.overflowY = 'inherit';
+        }
+      }
+
+      setInterval(checkScroll, 1000);
     })();
   </script>
   <div class="datepicker-container">
-    <button onclick="today()">Today</button> :: <input id="datepicker" type="datetime-local" min="2021-06-19T00:00"> <button onclick="reset()">Set Date</button>
+    <button onclick="today()">Today</button> :: <input id="datepicker" type="datetime-local" min="2021-06-19T00:00">
   </div>
 </body>
 </html>
