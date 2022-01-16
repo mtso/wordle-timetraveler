@@ -218,6 +218,22 @@
         document.body.appendChild(script);
       }
 
+      function debounce(fn, t) {
+        var timer = null;
+        return function() {
+          if (timer) {
+            clearTimeout(timer);
+          }
+
+          var args = arguments;
+          var ctx = this;
+          timer = setTimeout(function() {
+            fn.apply(ctx, args);
+            timer = null;
+          }, t);
+        };
+      }
+
       window.onload = function() {
         var queryParams = parseQuery(window.location.search);
         var startDate;
@@ -230,23 +246,21 @@
 
         var datepicker = document.getElementById('datepicker');
         datepicker.value = startDate.toISOString().slice(0, 10) + 'T00:00';
-        datepicker.addEventListener('change', function(e) {
+        datepicker.addEventListener('change', debounce(function(e) {
           setDate(e.target);
           reset();
-        });
+        }, 2000));
 
         setDate(datepicker);
         reset();
       };
 
-      window.setDate = setDate;
       window.reset = reset;
 
       window.today = function today() {
         window.location.search = "";
       };
 
-      /* remove scroll-jack when modal is closed */
       function isModalOpen() {
         var gameapp = document.querySelector('game-app');
         if (!gameapp) return false;
@@ -259,7 +273,6 @@
         if (isModalOpen() && document.body.style.overflowY !== 'hidden') {
           document.body.style.overflowY = 'hidden';
         } else if (!isModalOpen() && document.body.style.overflowY !== 'inherit') {
-          console.log('called')
           document.body.style.overflowY = 'inherit';
         }
       }
